@@ -1,0 +1,56 @@
+# Import libraries
+pip install tensorflow
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense
+from sklearn.metrics import accuracy_score, confusion_matrix
+
+# Step 1 – Load Dataset
+df = pd.read_csv("C:/Users/Aishwarya/Downloads/Churn_Modelling (2).csv")
+
+# Step 2 – Prepare features (X) and target (y)
+X = df.drop(['RowNumber', 'CustomerId', 'Surname', 'Exited'], axis=1)
+y = df['Exited']
+
+# Convert categorical variables to numeric using one-hot encoding
+X = pd.get_dummies(X, drop_first=True)
+
+# Step 3 – Split data into train and test
+x_train, x_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Step 4 – Normalize the data
+scaler = StandardScaler()
+x_train = scaler.fit_transform(x_train)
+x_test = scaler.transform(x_test)
+
+# Step 5 – Build the Neural Network
+model = Sequential()
+
+# Input layer + first hidden layer
+model.add(Dense(units=6, activation='relu', input_dim=x_train.shape[1]))
+
+# Second hidden layer
+model.add(Dense(units=6, activation='relu'))
+
+# Output layer (1 neuron for binary classification)
+model.add(Dense(units=1, activation='sigmoid'))
+
+# Step 6 – Compile the model
+model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+
+# Step 7 – Train the model
+model.fit(x_train, y_train, batch_size=32, epochs=100, verbose=1)
+
+# Step 8 – Predict on test data
+y_pred = model.predict(x_test)
+y_pred = (y_pred > 0.5)  # Convert probabilities into 0 or 1
+
+# Step 9 – Evaluate model
+accuracy = accuracy_score(y_test, y_pred)
+cm = confusion_matrix(y_test, y_pred)
+
+print("Accuracy:", accuracy)
+print("Confusion Matrix:\n", cm)
