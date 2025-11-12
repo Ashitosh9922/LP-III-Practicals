@@ -1,0 +1,44 @@
+# Import library
+import matplotlib.pyplot as plt
+
+# Step 1: Define the function and its derivative
+def f(x):
+    return (x + 3)**2                # given function y = (x + 3)^2
+
+def df(x):
+    return 2 * (x + 3)              # derivative dy/dx = 2(x + 3)
+
+# Step 2: Initialize variables
+x_old = 2                           # starting point
+learning_rate = 0.01                # step size
+precision = 0.000001                # when to stop
+max_iters = 1000                    # safety limit
+
+# Step 3: Gradient Descent loop
+steps = []                          # to store x values for plotting
+
+for i in range(max_iters):
+    x_new = x_old - learning_rate * df(x_old)  # update rule
+    steps.append(x_new)
+    
+    # check if change is very small
+    if abs(x_new - x_old) < precision:
+        print("Converged in", i, "iterations.")
+        break
+    x_old = x_new                    # update old value
+
+# Step 4: Print result
+print("Local minimum occurs at x =", round(x_new, 4))
+print("Minimum value of function =", round(f(x_new), 4))
+
+# Step 5: Plot function and steps
+import numpy as np
+X = np.linspace(-6, 4, 100)
+Y = f(X)
+plt.plot(X, Y, label="y = (x + 3)^2")
+plt.scatter(steps, [f(x) for x in steps], color='red', s=20, label="GD steps")
+plt.title("Gradient Descent on y = (x + 3)^2")
+plt.xlabel("x")
+plt.ylabel("y")
+plt.legend()
+plt.show()
