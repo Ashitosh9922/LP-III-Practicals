@@ -1,0 +1,120 @@
+
+import pandas as pd
+import numpy as np
+import re
+import string
+import nltk
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+from nltk.corpus import stopwords
+from nltk.stem import WordNetLemmatizer
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.svm import SVC
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+
+# -----------------------------
+# 📌 Step 2: Load dataset
+# -----------------------------
+df = pd.read_csv("C:/Users/Aishwarya/Downloads/emails.csv/emails.csv")
+print("✅ Dataset loaded successfully!")
+print(df.head())
+
+# -----------------------------
+# 📌 Step 3: Check for missing values
+# -----------------------------
+print("\nMissing values:\n", df.isnull().sum())
+
+# -----------------------------
+# 📌 Step 4: Text Cleaning
+# -----------------------------
+nltk.download('stopwords')
+nltk.download('wordnet')
+nltk.download('punkt')
+
+stop = stopwords.words('english')
+lemmatizer = WordNetLemmatizer()
+
+def clean_text(text):
+    text = str(text).lower()                      # lowercase
+    text = re.sub(r'http\S+|www\S+', '', text)    # remove links
+    text = re.sub(r'[^a-z\s]', '', text)          # keep only alphabets
+    words = [lemmatizer.lemmatize(word) for word in text.split() if word not in stop]
+    text = ' '.join(words).strip()
+    return text
+
+df['clean_text'] = df['text'].apply(clean_text)
+
+# 🔹 Replace empty texts with 'empty'
+df['clean_text'] = df['clean_text'].apply(lambda x: x if len(x) > 0 else 'empty')
+
+print("\n✅ Text cleaning done!")
+print(df[['text', 'clean_text']].head())
+
+# -----------------------------
+# 📌 Step 5: TF-IDF Vectorization
+# -----------------------------
+from sklearn.feature_extraction.text import TfidfVectorizer
+
+tfidf = TfidfVectorizer(max_features=3000)
+X = tfidf.fit_transform(df['clean_text']).toarray()
+y = df['spam']  # 1 = spam, 0 = not spam
+
+print("\n✅ TF-IDF Vectorization complete! Shape:", X.shape)
+
+# -----------------------------
+# 📌 Step 6: Train-Test Split
+# -----------------------------
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
+print("\n📊 Data Split:")
+print("Training data:", X_train.shape)
+print("Testing data:", X_test.shape)
+
+# -----------------------------
+# 📌 Step 7: KNN Model
+# -----------------------------
+knn = KNeighborsClassifier(n_neighbors=5, metric='euclidean')
+knn.fit(X_train, y_train)
+y_pred_knn = knn.predict(X_test)
+
+print("\n🔹 K-Nearest Neighbors (KNN) Results 🔹")
+print("Accuracy:", round(accuracy_score(y_test, y_pred_knn), 4))
+print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_knn))
+print("\nClassification Report:\n", classification_report(y_test, y_pred_knn))
+
+# -----------------------------
+# 📌 Step 8: SVM Model
+# -----------------------------
+svm = SVC(kernel='linear', probability=True)
+svm.fit(X_train, y_train)
+y_pred_svm = svm.predict(X_test)
+
+print("\n🔹 Support Vector Machine (SVM) Results 🔹")
+print("Accuracy:", round(accuracy_score(y_test, y_pred_svm), 4))
+print("\nConfusion Matrix:\n", confusion_matrix(y_test, y_pred_svm))
+print("\nClassification Report:\n", classification_report(y_test, y_pred_svm))
+
+# -----------------------------
+# 📊 Step 9: Accuracy Comparison
+# -----------------------------
+acc_knn = accuracy_score(y_test, y_pred_knn)
+acc_svm = accuracy_score(y_test, y_pred_svm)
+
+plt.figure(figsize=(6,4))
+plt.bar(['KNN', 'SVM'], [acc_knn, acc_svm], color=['skyblue', 'lightgreen'])
+plt.title('📊 KNN vs SVM Accuracy Comparison')
+plt.ylabel('Accuracy')
+plt.show()
+
+print("\n✅ Final Comparison:")
+print(f"KNN Accuracy: {acc_knn:.4f}")
+print(f"SVM Accuracy: {acc_svm:.4f}")
+
+if acc_knn > acc_svm:
+    print("🏆 KNN performed better!")
+else:
+    print("🏆 SVM performed better!")
