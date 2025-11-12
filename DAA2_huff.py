@@ -1,83 +1,93 @@
 class Node:
-    """A Huffman Tree Node"""
+    """Huffman Tree Node"""
 
-    def __init__(self, freq_, symbol_, left_=None, right_=None):
-        # frequency of symbol
-        self.freq = freq_
-
-        # symbol name (character)
-        self.symbol = symbol_
-
-        # node left of current node
-        self.left = left_
-
-        # node right of current node
-        self.right = right_
-
-        # tree direction (0/1)
-        self.huff = ""
+    def __init__(self, freq, sym, left=None, right=None):
+        self.freq = freq      # frequency of character
+        self.sym = sym        # symbol (character)
+        self.left = left      # left child
+        self.right = right    # right child
+        self.huff = ""        # 0 or 1 assigned later
 
 
-def print_nodes(node, val=""):
-    # huffman code for current node
-    new_val = val + str(node.huff)
+def print_code(node, code=""):
+    """Recursively print Huffman codes"""
+    new_code = code + str(node.huff)
 
-    # if node is not an edge node then traverse inside it
     if node.left:
-        print_nodes(node.left, new_val)
+        print_code(node.left, new_code)
     if node.right:
-        print_nodes(node.right, new_val)
+        print_code(node.right, new_code)
 
-    # if node is edge node then display its huffman code
+    # If it's a leaf node, print its code
     if not node.left and not node.right:
-        print(f"{node.symbol} -> {new_val}")
+        print(f"{node.sym} -> {new_code}")
 
 
-# characters for huffman tree
-chars = ["h", "e", "l", "o"," ","w", "r","d"]
+# Step 1: Input string
+text = input("Enter a string: ")
 
-# frequency of characters
-freq = [1, 1, 3, 2, 1,1, 1,1]
+# Step 2: Count frequency of each character
+freqs = {}
+for ch in text:
+    if ch in freqs:
+        freqs[ch] += 1
+    else:
+        freqs[ch] = 1
 
-# list containing huffman tree nodes of characters and frequencies
-nodes = [Node(freq[x], chars[x]) for x in range(len(chars))]
+# Step 3: Create nodes for each character
+nodes = []
+for ch in freqs:
+    nodes.append(Node(freqs[ch], ch))
 
+# Step 4: Build Huffman Tree
 while len(nodes) > 1:
-    # sort all the nodes in ascending order based on their frequency
-    nodes = sorted(nodes, key=lambda x: x.freq)
+    # Sort by frequency (smallest first)
+    nodes.sort(key=lambda x: x.freq)
 
-    # pick 2 smallest nodes
+    # Pick two smallest nodes
     left = nodes[0]
     right = nodes[1]
 
-    # assign directional value to these nodes
+    # Assign binary values
     left.huff = 0
     right.huff = 1
 
-    # combine the 2 smallest nodes to create new node as their parent
-    newNode = Node(left.freq + right.freq, left.symbol + right.symbol, left, right)
+    # Create new combined node
+    new_node = Node(left.freq + right.freq, left.sym + right.sym, left, right)
 
-    # remove the 2 nodes and add their parent as new node among others
+    # Replace the two smallest nodes with their parent node
     nodes.remove(left)
     nodes.remove(right)
-    nodes.append(newNode)
+    nodes.append(new_node)
 
-
-print("Characters :", f'[{", ".join(chars)}]')
-print("Frequency  :", freq, "\n\nHuffman Encoding:")
-print_nodes(nodes[0])
+# Step 5: Display results
+print("\nCharacters:", list(freqs.keys()))
+print("Frequencies:", list(freqs.values()))
+print("\nHuffman Codes:")
+print_code(nodes[0])
 
 """
-OUTPUT:
+SAMPLE OUTPUT:
 
-Characters : [a, b, c, d, e, f]
-Frequency  : [5, 9, 12, 13, 16, 45]
+Enter a string: hello
 
-Huffman Encoding:
-f -> 0
-c -> 100
-d -> 101
-a -> 1100
-b -> 1101
-e -> 111
+Characters: ['h', 'e', 'l', 'o']
+Frequencies: [1, 1, 2, 1]
+
+Huffman Codes:
+h -> 00
+e -> 01
+o -> 10
+l -> 11
+
+--------------------------------------------
+EXPLANATION:
+1️⃣ Count how many times each letter appears.
+2️⃣ Each letter becomes a node in the tree.
+3️⃣ Combine two smallest frequency nodes → parent.
+4️⃣ Assign 0 (left) and 1 (right).
+5️⃣ Continue until one root node remains.
+6️⃣ Print Huffman codes for all characters.
+--------------------------------------------
 """
+
